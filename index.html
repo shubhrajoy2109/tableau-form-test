@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tableau Publishing</title>
+    <script
+            src="https://code.jquery.com/jquery-3.7.1.slim.min.js"
+            integrity="sha256-kmHvs0B+OpCW5GVHUNjv9rOmY0IvSIRcf7zGUDTDQM8="
+            crossorigin="anonymous"></script>
     <style>
         #workbookNameContainer, #workBookPathContainer, #ifnewwbContainer, #ifnewwbhasmultipledsContainer, #datasourcedetails {
             display: none;
@@ -110,6 +114,7 @@
 </body>
 <script>
     function handleFormSubmit(event) {
+        const url = "https://requestbin.myworkato.com/tp69v2tp"
         event.preventDefault();
         const formData = new FormData(event.target);
         const data = Object.fromEntries(formData.entries());
@@ -139,7 +144,25 @@
             result[k] = data[k];
         }
         result.source_destination_map = rows;
-        console.log(result);
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(result)
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Success:', data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
     }
     document.getElementById('tableauid').addEventListener('submit', handleFormSubmit);
     document.addEventListener('DOMContentLoaded', function() {
