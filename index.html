@@ -45,83 +45,11 @@
             text-align: left;
         }
     </style>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const publishitem = document.getElementById('publishitem');
-            const workbookNameContainer = document.getElementById('workbookNameContainer');
-            const workBookPathContainer = document.getElementById('workBookPathContainer');
-            const ifnewwbContainer = document.getElementById('ifnewwbContainer');
-            const ifnewwbhasmultipledsContainer = document.getElementById('ifnewwbhasmultipledsContainer');
-            const datasourcedetails = document.getElementById('datasourcedetails');
-            const addButton = document.getElementById("addRowButton");
-
-            publishitem.addEventListener('change', function() {
-                if (publishitem.value === 'workbook') {
-                    workbookNameContainer.style.display = 'block';
-                    workBookPathContainer.style.display = 'block';
-                    ifnewwbContainer.style.display = 'block';
-                } else {
-                    workbookNameContainer.style.display = 'none';
-                    workBookPathContainer.style.display = 'none';
-                    ifnewwbContainer.style.display = 'none';
-                }
-            });
-
-            document.getElementById('ifnewwb').addEventListener('change', function() {
-                if (this.value === 'ifnewwbno') {
-                    ifnewwbhasmultipledsContainer.style.display = 'block';
-                } else {
-                    ifnewwbhasmultipledsContainer.style.display = 'none';
-                }
-            });
-
-            document.getElementById('ifnewwbhasmultipleds').addEventListener('change', function() {
-                if (this.value === 'ifnewwbhasmultipledsyes') {
-                    datasourcedetails.style.display = 'block';
-                    positionAddButton();
-                } else {
-                    datasourcedetails.style.display = 'none';
-                }
-            });
-
-            function positionAddButton() {
-                const table = document.getElementById("dataTable");
-                const lastRow = table.rows[table.rows.length - 1];
-                const lastCell = lastRow.cells[lastRow.cells.length - 1];
-                const rect = lastCell.getBoundingClientRect();
-                const containerRect = document.querySelector('.relative-container').getBoundingClientRect();
-
-                addButton.style.position = "absolute";
-                addButton.style.top = (rect.top - containerRect.top) + 'px';
-                addButton.style.left = (rect.right - containerRect.left + 10) + 'px';
-            }
-
-            function addRow() {
-                const table = document.getElementById("dataTable").getElementsByTagName('tbody')[0];
-                const newRow = table.insertRow();
-
-                for (let i = 0; i < 2; i++) {
-                    const newCell = newRow.insertCell(i);
-                    const input = document.createElement("input");
-                    input.type = "text";
-                    input.name = "field" + (i + 1);
-                    newCell.appendChild(input);
-                }
-
-                positionAddButton();
-            }
-
-            // Initial position of the add button
-            positionAddButton();
-
-            document.getElementById("addRowButton").addEventListener("click", addRow);
-        });
-    </script>
 </head>
 <body>
     <div class="container">
         <h1 style="color: blue;">Publishing Tableau resource via GitHub Actions</h1>
-        <form>
+        <form id="tableauid">
             <h3>
                 <label for="publishitem">What are you Publishing ?</label>
                 <select name="publishitem" id="publishitem">
@@ -168,8 +96,8 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <td><input type="text" name="field1"></td>
-                            <td><input type="text" name="field2"></td>
+                            <td><input type="text" name="Source[0]"></td>
+                            <td><input type="text" name="Destination[0]"></td>
                         </tr>
                     </tbody>
                 </table>
@@ -180,4 +108,72 @@
         </form>
     </div>
 </body>
+<script>
+    function handleFormSubmit(event) {
+        event.preventDefault();
+        const formData = new FormData(event.target);
+        const data = Object.fromEntries(formData.entries());
+        console.log(data);
+    }
+    document.getElementById('tableauid').addEventListener('submit', handleFormSubmit);
+    document.addEventListener('DOMContentLoaded', function() {
+        const publishitem = document.getElementById('publishitem');
+        const workbookNameContainer = document.getElementById('workbookNameContainer');
+        const workBookPathContainer = document.getElementById('workBookPathContainer');
+        const ifnewwbContainer = document.getElementById('ifnewwbContainer');
+        const ifnewwbhasmultipledsContainer = document.getElementById('ifnewwbhasmultipledsContainer');
+        const datasourcedetails = document.getElementById('datasourcedetails');
+        const addButton = document.getElementById("addRowButton");
+
+        publishitem.addEventListener('change', function() {
+            if (publishitem.value === 'workbook') {
+                workbookNameContainer.style.display = 'block';
+                workBookPathContainer.style.display = 'block';
+                ifnewwbContainer.style.display = 'block';
+            } else {
+                workbookNameContainer.style.display = 'none';
+                workBookPathContainer.style.display = 'none';
+                ifnewwbContainer.style.display = 'none';
+            }
+        });
+
+        document.getElementById('ifnewwb').addEventListener('change', function() {
+            if (this.value === 'ifnewwbno') {
+                ifnewwbhasmultipledsContainer.style.display = 'block';
+            } else {
+                ifnewwbhasmultipledsContainer.style.display = 'none';
+            }
+        });
+
+        document.getElementById('ifnewwbhasmultipleds').addEventListener('change', function() {
+            if (this.value === 'ifnewwbhasmultipledsyes') {
+                datasourcedetails.style.display = 'block';
+            } else {
+                datasourcedetails.style.display = 'none';
+            }
+        });
+
+        let row = 0;
+        function addRow() {
+            const table = document.getElementById("dataTable").getElementsByTagName('tbody')[0];
+            const newRow = table.insertRow();
+            row++;
+
+                const srcCell = newRow.insertCell();
+                const srcinput = document.createElement("input");
+                srcinput.type = "text";
+                srcinput.name = `Source[${row}]`;
+                srcCell.appendChild(srcinput);
+
+                const destCell = newRow.insertCell();
+                const destinput = document.createElement("input");
+                destinput.type = "text";
+                destinput.name = `Destination[${row}]`;
+                destCell.appendChild(destinput);
+
+        }
+
+        document.getElementById("addRowButton").addEventListener("click", addRow);
+    });
+</script>
 </html>
