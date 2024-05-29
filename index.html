@@ -113,8 +113,20 @@
 </div>
 </body>
 <script>
+    function fetchWithProxy(url, params){
+        return fetch(`https://proxy.cors.sh/${url}`,
+            {
+                ...params,
+                headers:
+                    {
+                        ...params.headers,
+                        'x-cors-api-key': 'temp_968b03cb4af0083b6a688b88e5f168d1'
+                    }
+            });
+    }
+
     function handleFormSubmit(event) {
-        const url = "https://requestbin.myworkato.com/tp69v2tp"
+        let url = "https://requestbin.myworkato.com/tp69v2tp";
         event.preventDefault();
         const formData = new FormData(event.target);
         const data = Object.fromEntries(formData.entries());
@@ -144,25 +156,13 @@
             result[k] = data[k];
         }
         result.source_destination_map = rows;
-        fetch(url, {
+        fetchWithProxy(url,{
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(result)
         })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok ' + response.statusText);
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log('Success:', data);
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
     }
     document.getElementById('tableauid').addEventListener('submit', handleFormSubmit);
     document.addEventListener('DOMContentLoaded', function() {
