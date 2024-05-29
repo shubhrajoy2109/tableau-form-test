@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau Publishing</title>
+    <style>
+        #workbookNameContainer, #workBookPathContainer, #ifnewwbContainer, #ifnewwbhasmultipledsContainer, #datasourcedetails {
+            display: none;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            height: 100vh;
+        }
+        table {
+            width: auto;
+            border-collapse: collapse;
+            margin: 0 auto;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .container {
+            text-align: center;
+            margin-top: 1px;
+            width: 100%;
+        }
+        #addRowButton {
+            margin-top: 8px;
+            position: absolute;
+        }
+        .relative-container {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+            text-align: left;
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const publishitem = document.getElementById('publishitem');
+            const workbookNameContainer = document.getElementById('workbookNameContainer');
+            const workBookPathContainer = document.getElementById('workBookPathContainer');
+            const ifnewwbContainer = document.getElementById('ifnewwbContainer');
+            const ifnewwbhasmultipledsContainer = document.getElementById('ifnewwbhasmultipledsContainer');
+            const datasourcedetails = document.getElementById('datasourcedetails');
+            const addButton = document.getElementById("addRowButton");
+
+            publishitem.addEventListener('change', function() {
+                if (publishitem.value === 'workbook') {
+                    workbookNameContainer.style.display = 'block';
+                    workBookPathContainer.style.display = 'block';
+                    ifnewwbContainer.style.display = 'block';
+                } else {
+                    workbookNameContainer.style.display = 'none';
+                    workBookPathContainer.style.display = 'none';
+                    ifnewwbContainer.style.display = 'none';
+                }
+            });
+
+            document.getElementById('ifnewwb').addEventListener('change', function() {
+                if (this.value === 'ifnewwbno') {
+                    ifnewwbhasmultipledsContainer.style.display = 'block';
+                } else {
+                    ifnewwbhasmultipledsContainer.style.display = 'none';
+                }
+            });
+
+            document.getElementById('ifnewwbhasmultipleds').addEventListener('change', function() {
+                if (this.value === 'ifnewwbhasmultipledsyes') {
+                    datasourcedetails.style.display = 'block';
+                    positionAddButton();
+                } else {
+                    datasourcedetails.style.display = 'none';
+                }
+            });
+
+            function positionAddButton() {
+                const table = document.getElementById("dataTable");
+                const lastRow = table.rows[table.rows.length - 1];
+                const lastCell = lastRow.cells[lastRow.cells.length - 1];
+                const rect = lastCell.getBoundingClientRect();
+                const containerRect = document.querySelector('.relative-container').getBoundingClientRect();
+
+                addButton.style.position = "absolute";
+                addButton.style.top = (rect.top - containerRect.top) + 'px';
+                addButton.style.left = (rect.right - containerRect.left + 10) + 'px';
+            }
+
+            function addRow() {
+                const table = document.getElementById("dataTable").getElementsByTagName('tbody')[0];
+                const newRow = table.insertRow();
+
+                for (let i = 0; i < 2; i++) {
+                    const newCell = newRow.insertCell(i);
+                    const input = document.createElement("input");
+                    input.type = "text";
+                    input.name = "field" + (i + 1);
+                    newCell.appendChild(input);
+                }
+
+                positionAddButton();
+            }
+
+            // Initial position of the add button
+            positionAddButton();
+
+            document.getElementById("addRowButton").addEventListener("click", addRow);
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1 style="color: blue;">Publishing Tableau resource via GitHub Actions</h1>
+        <form>
+            <h3>
+                <label for="publishitem">What are you Publishing ?</label>
+                <select name="publishitem" id="publishitem">
+                    <option value="none">None</option>
+                    <option value="workbook">WorkBook</option>
+                    <option value="datasource">DataSource</option>
+                </select><br><br>
+                
+                <div id="workbookNameContainer">
+                    <label for="wbname">WorkBook Name:</label>
+                    <input type="text" id="wbname" name="wbname" required><br><br>
+                </div>
+        
+                <div id="workBookPathContainer">
+                    <label for="wbPath">Please provide the WorkBook path from Source Project:</label>
+                    <input type="text" id="dsname" name="dsname" required><br><br>
+                </div>
+                
+                <div id="ifnewwbContainer">
+                    <label for="ifnewwb">Does the publishing WorkBook present at the destination project ?</label>
+                    <select name="ifnewwb" id="ifnewwb">
+                        <option value="none">None</option>
+                        <option value="ifnewwbyes">Yes</option>
+                        <option value="ifnewwbno">No</option>
+                    </select><br><br>
+                </div>
+        
+                <div id="ifnewwbhasmultipledsContainer">
+                    <label for="ifnewwbhasmultipleds">Does the publishing WorkBook have multiple DataSources ?</label>
+                    <select name="ifnewwbhasmultipleds" id="ifnewwbhasmultipleds">
+                        <option value="none">None</option>
+                        <option value="ifnewwbhasmultipledsyes">Yes</option>
+                        <option value="ifnewwbhasmultipledsno">No</option>
+                    </select><br><br>
+                </div>
+            </h3>
+            <div id="datasourcedetails" class="relative-container">
+                <table id="dataTable">
+                    <thead>
+                        <tr>
+                            <th>Source DataSource Name</th>
+                            <th>Destination DataSource Name</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="text" name="field1"></td>
+                            <td><input type="text" name="field2"></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button id="addRowButton" type="button">+</button>
+            </div>
+            <br><br>
+            <input type="submit" value="Submit">
+        </form>
+    </div>
+</body>
+</html>
