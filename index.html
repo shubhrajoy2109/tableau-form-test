@@ -47,73 +47,99 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1 style="color: blue;">Publishing Tableau resource via GitHub Actions</h1>
-        <form id="tableauid">
-            <h3>
-                <label for="publishitem">What are you Publishing ?</label>
-                <select name="publishitem" id="publishitem">
-                    <option value="none">None</option>
-                    <option value="workbook">WorkBook</option>
-                    <option value="datasource">DataSource</option>
-                </select><br><br>
-                
-                <div id="workbookNameContainer">
-                    <label for="wbname">WorkBook Name:</label>
-                    <input type="text" id="wbname" name="wbname" required><br><br>
-                </div>
-        
-                <div id="workBookPathContainer">
-                    <label for="wbPath">Please provide the WorkBook path from Source Project:</label>
-                    <input type="text" id="dsname" name="dsname" required><br><br>
-                </div>
-                
-                <div id="ifnewwbContainer">
-                    <label for="ifnewwb">Does the publishing WorkBook present at the destination project ?</label>
-                    <select name="ifnewwb" id="ifnewwb">
-                        <option value="none">None</option>
-                        <option value="ifnewwbyes">Yes</option>
-                        <option value="ifnewwbno">No</option>
-                    </select><br><br>
-                </div>
-        
-                <div id="ifnewwbhasmultipledsContainer">
-                    <label for="ifnewwbhasmultipleds">Does the publishing WorkBook have multiple DataSources ?</label>
-                    <select name="ifnewwbhasmultipleds" id="ifnewwbhasmultipleds">
-                        <option value="none">None</option>
-                        <option value="ifnewwbhasmultipledsyes">Yes</option>
-                        <option value="ifnewwbhasmultipledsno">No</option>
-                    </select><br><br>
-                </div>
-            </h3>
-            <div id="datasourcedetails" class="relative-container">
-                <table id="dataTable">
-                    <thead>
-                        <tr>
-                            <th>Source DataSource Name</th>
-                            <th>Destination DataSource Name</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><input type="text" name="Source[0]"></td>
-                            <td><input type="text" name="Destination[0]"></td>
-                        </tr>
-                    </tbody>
-                </table>
-                <button id="addRowButton" type="button">+</button>
+<div class="container">
+    <h1 style="color: blue;">Publishing Tableau resource via GitHub Actions</h1>
+    <form id="tableauid">
+        <h3>
+            <label for="publishitem">What are you Publishing ?</label>
+            <select name="publishitem" id="publishitem">
+                <option value="none">None</option>
+                <option value="workbook">WorkBook</option>
+                <option value="datasource">DataSource</option>
+            </select><br><br>
+
+            <div id="workbookNameContainer">
+                <label for="wbname">WorkBook Name:</label>
+                <input type="text" id="wbname" name="wbname" required><br><br>
             </div>
-            <br><br>
-            <input type="submit" value="Submit">
-        </form>
-    </div>
+
+            <div id="workBookPathContainer">
+                <label for="wbPath">Please provide the WorkBook path from Source Project:</label>
+                <input type="text" id="dsname" name="dsname" required><br><br>
+            </div>
+
+            <div id="ifnewwbContainer">
+                <label for="ifnewwb">Does the publishing WorkBook present at the destination project ?</label>
+                <select name="ifnewwb" id="ifnewwb">
+                    <option value="none">None</option>
+                    <option value="ifnewwbyes">Yes</option>
+                    <option value="ifnewwbno">No</option>
+                </select><br><br>
+            </div>
+
+            <div id="ifnewwbhasmultipledsContainer">
+                <label for="ifnewwbhasmultipleds">Does the publishing WorkBook have multiple DataSources ?</label>
+                <select name="ifnewwbhasmultipleds" id="ifnewwbhasmultipleds">
+                    <option value="none">None</option>
+                    <option value="ifnewwbhasmultipledsyes">Yes</option>
+                    <option value="ifnewwbhasmultipledsno">No</option>
+                </select><br><br>
+            </div>
+        </h3>
+        <div id="datasourcedetails" class="relative-container">
+            <table id="dataTable">
+                <thead>
+                <tr>
+                    <th>Source DataSource Name</th>
+                    <th>Destination DataSource Name</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td><input type="text" name="Source[0]"></td>
+                    <td><input type="text" name="Destination[0]"></td>
+                </tr>
+                </tbody>
+            </table>
+            <button id="addRowButton" type="button">+</button>
+        </div>
+        <br><br>
+        <input type="submit" value="Submit">
+    </form>
+</div>
 </body>
 <script>
     function handleFormSubmit(event) {
         event.preventDefault();
         const formData = new FormData(event.target);
         const data = Object.fromEntries(formData.entries());
-        console.log(data);
+        const srcRegx = /Source\[([0-9]+)\]/;
+        const dstnRegx = /Destination\[([0-9]+)\]/;
+        const result = {}
+        const rows = []
+        for(let k in data){
+            if(k.match(srcRegx)){
+                const srcIndex = k.match(srcRegx)[1];
+                if(rows[srcIndex]){
+                    rows[srcIndex].source = data[k]
+                }else{
+                    rows[srcIndex] = {source:data[k] };
+                }
+                continue;
+            }
+            if(k.match(dstnRegx)){
+                const dstnIndex = k.match(dstnRegx)[1];
+                if(rows[dstnIndex]){
+                    rows[dstnIndex].destination = data[k]
+                }else{
+                    rows[dstnIndex] = {destination:data[k] };
+                }
+                continue;
+            }
+            result[k] = data[k];
+        }
+        result.source_destination_map = rows;
+        console.log(result);
     }
     document.getElementById('tableauid').addEventListener('submit', handleFormSubmit);
     document.addEventListener('DOMContentLoaded', function() {
@@ -159,17 +185,17 @@
             const newRow = table.insertRow();
             row++;
 
-                const srcCell = newRow.insertCell();
-                const srcinput = document.createElement("input");
-                srcinput.type = "text";
-                srcinput.name = `Source[${row}]`;
-                srcCell.appendChild(srcinput);
+            const srcCell = newRow.insertCell();
+            const srcinput = document.createElement("input");
+            srcinput.type = "text";
+            srcinput.name = `Source[${row}]`;
+            srcCell.appendChild(srcinput);
 
-                const destCell = newRow.insertCell();
-                const destinput = document.createElement("input");
-                destinput.type = "text";
-                destinput.name = `Destination[${row}]`;
-                destCell.appendChild(destinput);
+            const destCell = newRow.insertCell();
+            const destinput = document.createElement("input");
+            destinput.type = "text";
+            destinput.name = `Destination[${row}]`;
+            destCell.appendChild(destinput);
 
         }
 
