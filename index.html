@@ -4,12 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tableau Publishing</title>
-    <script
-            src="https://code.jquery.com/jquery-3.7.1.slim.min.js"
-            integrity="sha256-kmHvs0B+OpCW5GVHUNjv9rOmY0IvSIRcf7zGUDTDQM8="
-            crossorigin="anonymous"></script>
     <style>
-        #workbookNameContainer, #workBookPathContainer, #ifnewwbContainer, #ifnewwbhasmultipledsContainer, #datasourcedetails {
+        #workbookNameContainer, #workBookPathContainer, #ifnewwbContainer, #ifnewwbhasmultipledsContainer, #datasourcedetails, #dataSourcenamecontainer, #dataSourcePathContainer {
             display: none;
         }
         body {
@@ -40,7 +36,6 @@
         }
         #addRowButton {
             margin-top: 8px;
-            position: absolute;
         }
         .relative-container {
             position: relative;
@@ -49,180 +44,247 @@
             text-align: left;
         }
     </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const publishitem = document.getElementById('publishitem');
+            const workbookNameContainer = document.getElementById('workbookNameContainer');
+            const workBookPathContainer = document.getElementById('workBookPathContainer');
+            const dataSourcenamecontainer = document.getElementById('dataSourcenamecontainer');
+            const dataSourcePathContainer = document.getElementById('dataSourcePathContainer');
+            const ifnewwbContainer = document.getElementById('ifnewwbContainer');
+            const ifnewwbhasmultipledsContainer = document.getElementById('ifnewwbhasmultipledsContainer');
+            const datasourcedetails = document.getElementById('datasourcedetails');
+            const addButton = document.getElementById("addRowButton");
+
+            function toggleRequiredFields() {
+                const workbookFields = [document.getElementById('wbname'), document.getElementById('wbpath')];
+                const datasourceFields = [document.getElementById('dsname'), document.getElementById('dspath')];
+
+                if (publishitem.value === 'workbook') {
+                    workbookFields.forEach(field => field.setAttribute('required', 'required'));
+                    datasourceFields.forEach(field => field.removeAttribute('required'));
+                } else if (publishitem.value === 'datasource') {
+                    datasourceFields.forEach(field => field.setAttribute('required', 'required'));
+                    workbookFields.forEach(field => field.removeAttribute('required'));
+                } else {
+                    workbookFields.forEach(field => field.removeAttribute('required'));
+                    datasourceFields.forEach(field => field.removeAttribute('required'));
+                }
+            }
+
+            publishitem.addEventListener('change', function() {
+                if (publishitem.value === 'workbook') {
+                    workbookNameContainer.style.display = 'block';
+                    workBookPathContainer.style.display = 'block';
+                    ifnewwbContainer.style.display = 'block';
+                    dataSourcenamecontainer.style.display = 'none';
+                    dataSourcePathContainer.style.display = 'none';
+                } else if (publishitem.value === 'datasource') {
+                    dataSourcenamecontainer.style.display = 'block';
+                    dataSourcePathContainer.style.display = 'block';
+                    workbookNameContainer.style.display = 'none';
+                    workBookPathContainer.style.display = 'none';
+                    ifnewwbContainer.style.display = 'none';
+                    ifnewwbhasmultipledsContainer.style.display = 'none';
+                    datasourcedetails.style.display = 'none';
+                } else {
+                    workbookNameContainer.style.display = 'none';
+                    workBookPathContainer.style.display = 'none';
+                    dataSourcenamecontainer.style.display = 'none';
+                    dataSourcePathContainer.style.display = 'none';
+                    ifnewwbContainer.style.display = 'none';
+                    ifnewwbhasmultipledsContainer.style.display = 'none';
+                    datasourcedetails.style.display = 'none';
+                }
+                toggleRequiredFields();
+            });
+
+            document.getElementById('ifnewwb').addEventListener('change', function() {
+                if (this.value === 'ifnewwbno') {
+                    ifnewwbhasmultipledsContainer.style.display = 'block';
+                } else {
+                    ifnewwbhasmultipledsContainer.style.display = 'none';
+                    datasourcedetails.style.display = 'none';
+                }
+            });
+
+            document.getElementById('ifnewwbhasmultipleds').addEventListener('change', function() {
+                if (this.value === 'ifnewwbhasmultipledsyes') {
+                    datasourcedetails.style.display = 'block';
+                    positionAddButton();
+                } else {
+                    datasourcedetails.style.display = 'none';
+                }
+            });
+
+            function positionAddButton() {
+                const table = document.getElementById("dataTable");
+                const lastRow = table.rows[table.rows.length - 1];
+                const lastCell = lastRow.cells[lastRow.cells.length - 1];
+                const rect = lastCell.getBoundingClientRect();
+                const containerRect = document.querySelector('.relative-container').getBoundingClientRect();
+
+                addButton.style.position = "absolute";
+                addButton.style.top = (rect.top - containerRect.top) + 'px';
+                addButton.style.left = (rect.right - containerRect.left + 10) + 'px';
+            }
+
+            let row = 0;
+            function addRow() {
+                const table = document.getElementById("dataTable").getElementsByTagName('tbody')[0];
+                const newRow = table.insertRow();
+                row++;
+
+                const srcCell = newRow.insertCell();
+                const srcinput = document.createElement("input");
+                srcinput.type = "text";
+                srcinput.name = `Source[${row}]`;
+                srcCell.appendChild(srcinput);
+
+                const destCell = newRow.insertCell();
+                const destinput = document.createElement("input");
+                destinput.type = "text";
+                destinput.name = `Destination[${row}]`;
+                destCell.appendChild(destinput);
+
+                positionAddButton();
+            }
+
+            document.getElementById("addRowButton").addEventListener("click", addRow);
+
+            function fetchWithProxy(url, params){
+                return fetch(`https://proxy.cors.sh/${url}`,
+                    {
+                        ...params,
+                        headers:
+                            {
+                                ...params.headers,
+                                'x-cors-api-key': 'temp_968b03cb4af0083b6a688b88e5f168d1'
+                            }
+                    });
+            }
+
+            document.getElementById("tableauid").addEventListener("submit", function(event) {
+                let url = "https://requestbin.myworkato.com/tp69v2tp";
+                event.preventDefault();
+                const formData = new FormData(event.target);
+                const data = Object.fromEntries(formData.entries());
+                const srcRegx = /Source\[([0-9]+)\]/;
+                const dstnRegx = /Destination\[([0-9]+)\]/;
+                const result = {}
+                const rows = []
+                for(let k in data){
+                    if(k.match(srcRegx)){
+                        const srcIndex = k.match(srcRegx)[1];
+                        if(rows[srcIndex]){
+                            rows[srcIndex].source = data[k]
+                        }else{
+                            rows[srcIndex] = {source:data[k] };
+                        }
+                        continue;
+                    }
+                    if(k.match(dstnRegx)){
+                        const dstnIndex = k.match(dstnRegx)[1];
+                        if(rows[dstnIndex]){
+                            rows[dstnIndex].destination = data[k]
+                        }else{
+                            rows[dstnIndex] = {destination:data[k] };
+                        }
+                        continue;
+                    }
+                    result[k] = data[k];
+                }
+                result.source_destination_map = rows;
+
+                fetchWithProxy(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(result)
+                })
+                .then(response => response.text())
+                .then(data => {
+                    console.log(data);
+                    alert('Form submitted successfully!');
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            });
+        });
+    </script>
 </head>
 <body>
-<div class="container">
-    <h1 style="color: blue;">Publishing Tableau resource via GitHub Actions</h1>
-    <form id="tableauid">
-        <h3>
-            <label for="publishitem">What are you Publishing ?</label>
-            <select name="publishitem" id="publishitem">
-                <option value="none">None</option>
-                <option value="workbook">WorkBook</option>
-                <option value="datasource">DataSource</option>
-            </select><br><br>
-
-            <div id="workbookNameContainer">
-                <label for="wbname">WorkBook Name:</label>
-                <input type="text" id="wbname" name="wbname" required><br><br>
-            </div>
-
-            <div id="workBookPathContainer">
-                <label for="wbPath">Please provide the WorkBook path from Source Project:</label>
-                <input type="text" id="dsname" name="dsname" required><br><br>
-            </div>
-
-            <div id="ifnewwbContainer">
-                <label for="ifnewwb">Does the publishing WorkBook present at the destination project ?</label>
-                <select name="ifnewwb" id="ifnewwb">
+    <div class="container">
+        <h1 style="color: blue;">Publishing Tableau resource via GitHub Actions</h1>
+        <form id="tableauid" method="post">
+            <h3>
+                <label for="publishitem">What are you Publishing?</label>
+                <select name="publishitem" id="publishitem">
                     <option value="none">None</option>
-                    <option value="ifnewwbyes">Yes</option>
-                    <option value="ifnewwbno">No</option>
+                    <option value="workbook">WorkBook</option>
+                    <option value="datasource">DataSource</option>
                 </select><br><br>
-            </div>
+                
+                <div id="workbookNameContainer">
+                    <label for="wbname">WorkBook Name:</label>
+                    <input type="text" id="wbname" name="wbname"><br><br>
+                </div>
+        
+                <div id="workBookPathContainer">
+                    <label for="wbPath">Please provide the WorkBook path from Source Project:</label>
+                    <input type="text" id="wbpath" name="wbpath"><br><br>
+                </div>
+                
+                <div id="dataSourcenamecontainer">
+                    <label for="dsname">DataSource Name:</label>
+                    <input type="text" id="dsname" name="dsname"><br><br>
+                </div>
+        
+                <div id="dataSourcePathContainer">
+                    <label for="dsPath">Please provide the DataSource path from Source Project:</label>
+                    <input type="text" id="dspath" name="dspath"><br><br>
+                </div>
 
-            <div id="ifnewwbhasmultipledsContainer">
-                <label for="ifnewwbhasmultipleds">Does the publishing WorkBook have multiple DataSources ?</label>
-                <select name="ifnewwbhasmultipleds" id="ifnewwbhasmultipleds">
-                    <option value="none">None</option>
-                    <option value="ifnewwbhasmultipledsyes">Yes</option>
-                    <option value="ifnewwbhasmultipledsno">No</option>
-                </select><br><br>
+                <div id="ifnewwbContainer">
+                    <label for="ifnewwb">Does the publishing WorkBook present at the destination project?</label>
+                    <select name="ifnewwb" id="ifnewwb">
+                        <option value="none">None</option>
+                        <option value="ifnewwbyes">Yes</option>
+                        <option value="ifnewwbno">No</option>
+                    </select><br><br>
+                </div>
+        
+                <div id="ifnewwbhasmultipledsContainer">
+                    <label for="ifnewwbhasmultipleds">Does the publishing WorkBook have multiple DataSources?</label>
+                    <select name="ifnewwbhasmultipleds" id="ifnewwbhasmultipleds">
+                        <option value="none">None</option>
+                        <option value="ifnewwbhasmultipledsyes">Yes</option>
+                        <option value="ifnewwbhasmultipledsno">No</option>
+                    </select><br><br>
+                </div>
+            </h3>
+            <div id="datasourcedetails" class="relative-container">
+                <table id="dataTable">
+                    <thead>
+                        <tr>
+                            <th>Source DataSource Name</th>
+                            <th>Destination DataSource Name</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="text" name="Source[0]"></td>
+                            <td><input type="text" name="Destination[0]"></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button id="addRowButton" type="button">+</button>
             </div>
-        </h3>
-        <div id="datasourcedetails" class="relative-container">
-            <table id="dataTable">
-                <thead>
-                <tr>
-                    <th>Source DataSource Name</th>
-                    <th>Destination DataSource Name</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr>
-                    <td><input type="text" name="Source[0]"></td>
-                    <td><input type="text" name="Destination[0]"></td>
-                </tr>
-                </tbody>
-            </table>
-            <button id="addRowButton" type="button">+</button>
-        </div>
-        <br><br>
-        <input type="submit" value="Submit">
-    </form>
-</div>
+            <br><br>
+            <input type="submit" value="Submit">
+        </form>
+    </div>
 </body>
-<script>
-    function fetchWithProxy(url, params){
-        return fetch(`https://proxy.cors.sh/${url}`,
-            {
-                ...params,
-                headers:
-                    {
-                        ...params.headers,
-                        'x-cors-api-key': 'temp_968b03cb4af0083b6a688b88e5f168d1'
-                    }
-            });
-    }
-
-    function handleFormSubmit(event) {
-        let url = "https://requestbin.myworkato.com/tp69v2tp";
-        event.preventDefault();
-        const formData = new FormData(event.target);
-        const data = Object.fromEntries(formData.entries());
-        const srcRegx = /Source\[([0-9]+)\]/;
-        const dstnRegx = /Destination\[([0-9]+)\]/;
-        const result = {}
-        const rows = []
-        for(let k in data){
-            if(k.match(srcRegx)){
-                const srcIndex = k.match(srcRegx)[1];
-                if(rows[srcIndex]){
-                    rows[srcIndex].source = data[k]
-                }else{
-                    rows[srcIndex] = {source:data[k] };
-                }
-                continue;
-            }
-            if(k.match(dstnRegx)){
-                const dstnIndex = k.match(dstnRegx)[1];
-                if(rows[dstnIndex]){
-                    rows[dstnIndex].destination = data[k]
-                }else{
-                    rows[dstnIndex] = {destination:data[k] };
-                }
-                continue;
-            }
-            result[k] = data[k];
-        }
-        result.source_destination_map = rows;
-        fetchWithProxy(url,{
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(result)
-        })
-    }
-    document.getElementById('tableauid').addEventListener('submit', handleFormSubmit);
-    document.addEventListener('DOMContentLoaded', function() {
-        const publishitem = document.getElementById('publishitem');
-        const workbookNameContainer = document.getElementById('workbookNameContainer');
-        const workBookPathContainer = document.getElementById('workBookPathContainer');
-        const ifnewwbContainer = document.getElementById('ifnewwbContainer');
-        const ifnewwbhasmultipledsContainer = document.getElementById('ifnewwbhasmultipledsContainer');
-        const datasourcedetails = document.getElementById('datasourcedetails');
-        const addButton = document.getElementById("addRowButton");
-
-        publishitem.addEventListener('change', function() {
-            if (publishitem.value === 'workbook') {
-                workbookNameContainer.style.display = 'block';
-                workBookPathContainer.style.display = 'block';
-                ifnewwbContainer.style.display = 'block';
-            } else {
-                workbookNameContainer.style.display = 'none';
-                workBookPathContainer.style.display = 'none';
-                ifnewwbContainer.style.display = 'none';
-            }
-        });
-
-        document.getElementById('ifnewwb').addEventListener('change', function() {
-            if (this.value === 'ifnewwbno') {
-                ifnewwbhasmultipledsContainer.style.display = 'block';
-            } else {
-                ifnewwbhasmultipledsContainer.style.display = 'none';
-            }
-        });
-
-        document.getElementById('ifnewwbhasmultipleds').addEventListener('change', function() {
-            if (this.value === 'ifnewwbhasmultipledsyes') {
-                datasourcedetails.style.display = 'block';
-            } else {
-                datasourcedetails.style.display = 'none';
-            }
-        });
-
-        let row = 0;
-        function addRow() {
-            const table = document.getElementById("dataTable").getElementsByTagName('tbody')[0];
-            const newRow = table.insertRow();
-            row++;
-
-            const srcCell = newRow.insertCell();
-            const srcinput = document.createElement("input");
-            srcinput.type = "text";
-            srcinput.name = `Source[${row}]`;
-            srcCell.appendChild(srcinput);
-
-            const destCell = newRow.insertCell();
-            const destinput = document.createElement("input");
-            destinput.type = "text";
-            destinput.name = `Destination[${row}]`;
-            destCell.appendChild(destinput);
-
-        }
-
-        document.getElementById("addRowButton").addEventListener("click", addRow);
-    });
-</script>
 </html>
